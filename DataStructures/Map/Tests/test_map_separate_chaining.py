@@ -1,8 +1,8 @@
-from DataStructures.Map import map_linear_probing as mp
-from DataStructures.List import array_list as lt
+from DataStructures.Utils.utils import handle_not_implemented
+from DataStructures.Map import map_separate_chaining as mp
 from DataStructures.Map import map_entry as me
 from DataStructures.Map import map_functions as mf
-from DataStructures.Utils.utils import handle_not_implemented
+from DataStructures.List import array_list as lt
 
 
 def setup_tests(scale, shift):
@@ -24,7 +24,7 @@ def test_new_map():
     assert map["current_factor"] == 0
     assert map["limit_factor"] == 0.5
     assert map["size"] == 0
-    assert map["type"] == 'PROBING'
+    assert map["type"] == 'CHAINING'
 
     map = mp.new_map(10, 0.5)
     assert map["prime"] == 109345121
@@ -95,8 +95,6 @@ def test_remove():
     mp.remove(map, 1)
     assert map["size"] == 2
     assert not mp.contains(map, 1)
-    assert me.get_key(lt.get_element(map["table"], 1)) == '__EMPTY__'
-    assert me.get_value(lt.get_element(map["table"], 1)) == '__EMPTY__'
 
     # Test para el caso en que la llave no existe
     mp.remove(map, 1)
@@ -197,58 +195,6 @@ def test_value_set():
     new_map = mp.new_map(5, 0.5, 7)
     value_set = mp.value_set(new_map)
     assert lt.size(value_set) == 0
-
-
-@handle_not_implemented
-def test_find_slot():
-    map = setup_tests(1, 0)
-    mp.put(map, 1, 2)
-    mp.put(map, 2, 3)
-    mp.put(map, 3, 4)
-
-    # Test para el caso en que la llave existe
-
-    ocupied_1, pos_1 = mp.find_slot(map, 1, mf.hash_value(map, 1))
-    assert pos_1 == 1
-    assert ocupied_1 == True
-
-    ocupied_2, pos_2 = mp.find_slot(map, 2, mf.hash_value(map, 2))
-    assert pos_2 == 2
-    assert ocupied_2 == True
-
-    ocupied_3, pos_3 = mp.find_slot(map, 3, mf.hash_value(map, 3))
-    assert pos_3 == 3
-    assert ocupied_3 == True
-
-    # Test para el caso en que la llave no existe y retorna la posición donde debería ir la llave
-
-    ocupied_4, pos_4 = mp.find_slot(map, 8, mf.hash_value(map, 8))
-    assert pos_4 == 4
-    assert ocupied_4 == False
-
-    # Test para el caso en que la llave fue eliminada y retorna la posición donde debería ir la llave
-
-    mp.remove(map, 2)
-    ocupied_5, pos_5 = mp.find_slot(map, 8, mf.hash_value(map, 8))
-    assert pos_5 == 2
-    assert ocupied_5 == False
-
-
-@handle_not_implemented
-def test_is_available():
-    map = setup_tests(1, 0)
-    mp.put(map, 1, 2)
-    mp.put(map, 2, 3)
-    mp.put(map, 3, 4)
-
-    assert mp.is_available(map["table"], mf.hash_value(map, 1)) == False
-    assert mp.is_available(map["table"], mf.hash_value(map, 5)) == True
-    assert mp.is_available(map["table"], mf.hash_value(map, 7)) == True
-
-    # Test para el caso en que se elimina una llave y se verifica si la posición está disponible
-
-    mp.remove(map, 2)
-    assert mp.is_available(map["table"], mf.hash_value(map, 9)) == True
 
 
 @handle_not_implemented
