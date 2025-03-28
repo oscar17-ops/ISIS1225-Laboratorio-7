@@ -30,10 +30,9 @@ import time
 import tracemalloc
 
 
-# TODO Realice la importación del mapa linear probing
-# TODO Realice la importación de ArrayList como estructura de datos auxiliar para sus requerimientos
-# TODO Realice la importación del mapa separate chaining
-
+from DataStructures.Map import map_linear_probing as lp
+from DataStructures.Map import map_separate_chaining as sc
+from DataStructures.List import array_list as al
 
 data_dir = os.path.dirname(os.path.realpath('__file__')) + '/Data/GoodReads/'
 
@@ -55,20 +54,19 @@ def new_logic():
 
     #Tabla de Hash que contiene los libros indexados por good_reads_book_id  
     #(good_read_id -> book)
-    catalog['books_by_id'] = None #TODO completar la creación del mapa
+    catalog['books_by_id'] = lp(1000)
 
     #Tabla de Hash con la siguiente pareja llave valor: (author_name -> List(books))
-    catalog['books_by_authors'] = None #TODO completar la creación del mapa
-
+    catalog['books_by_authors'] = lp(500)
     #Tabla de Hash con la siguiente pareja llave valor: (tag_name -> tag)
-    catalog['tags'] = None #TODO completar la creación del mapa
+    catalog['tags'] = lp(300)
 
     #Tabla de Hash con la siguiente pareja llave valor: (tag_id -> book_tags)
     catalog['book_tags'] = lp.new_map(1000,0.7)
 
     #Tabla de Hash principal que contiene sub-mapas dentro de los valores
     #con la siguiente representación de la pareja llave valor: (author_name -> (original_publication_year -> list(books)))
-    catalog['books_by_year_author'] = None #TODO completar la creación del mapa
+    catalog['books_by_year_author'] = lp(500)
     
     return catalog
 
@@ -76,7 +74,22 @@ def new_logic():
 # Funciones para la carga de datos
 #  -------------------------------------------------------------
 
-#TODO: incorporar las funciones para toma de tiempo y memoria
+def getTime():
+    """Devuelve el tiempo actual en segundos"""
+    return time.perf_counter()
+
+def deltaTime(end, start):
+    """Calcula la diferencia de tiempo en milisegundos"""
+    return (end - start) * 1000  
+
+def getMemory():
+    """Obtiene el uso de memoria actual en bytes"""
+    return tracemalloc.get_traced_memory()[1]
+
+def deltaMemory(start, stop):
+    """Calcula la diferencia de memoria usada en KB"""
+    return (stop - start) / 1024  
+
 def load_data(catalog):
     """
     Carga los datos de los archivos y cargar los datos en la
@@ -196,8 +209,9 @@ def add_book_author_and_year(catalog, author_name, book):
     """
     books_by_year_author = catalog['books_by_year_author']
     pub_year = book['original_publication_year']
-    #Si el año de publicación está vacío se reemplaza por un valor simbolico
-    #TODO Completar manejo de los escenarios donde el año de publicación es vacío.
+    
+    if not pub_year:
+        pub_year = 'Unknown'
     author_value = lp.get(books_by_year_author,author_name)
     if author_value:
         pub_year_value = lp.get(author_value,pub_year)
@@ -209,7 +223,8 @@ def add_book_author_and_year(catalog, author_name, book):
             pub_year_map = lp.new_map(1000,0.7)
             lp.put(pub_year_map,pub_year,book)
     else:
-        pass # TODO Completar escenario donde no se había agregado el autor al mapa principal
+        pub_year_map = {pub_year : [book]}
+        lp.put(author_name, pub_year_map)
     return catalog
 
 
@@ -236,7 +251,7 @@ def add_book_tag(catalog, book_tag):
         book_tag_list = lp.get(catalog['book_tags'],t['tag_id'])
         al.add_last(book_tag_list,book_tag)
     else:
-        pass #TODO Completar escenario donde el book_tag no se había agregado al mapa   
+        lp.put(t['tag_id'], [book_tag])
     return catalog
 
 #  -------------------------------------------------------------
@@ -247,16 +262,15 @@ def get_book_info_by_book_id(catalog, good_reads_book_id):
     """
     Retorna toda la informacion que se tenga almacenada de un libro según su good_reads_id.
     """
-    #TODO Completar función de consulta
-    pass
+    return lp.get(good_reads_book_id)
 
 
 def get_books_by_author(catalog, author_name):
     """
     Retorna los libros asociado al autor ingresado por párametro
     """
-    #TODO Completar función de consulta
-    pass
+    return lp.get(author_name)
+    
 
 
 def get_books_by_tag(catalog, tag_name):
@@ -269,8 +283,11 @@ def get_books_by_tag(catalog, tag_name):
     de book_tags y finalmente relacionarlo con los datos completos del libro.
 
     """
-    #TODO Completar función de consulta
-    pass
+    tag = lp.get(tag_name)
+    if tag:
+        return lp.get(tag['tag_id'])
+    return None
+    
 
 
 def get_books_by_author_pub_year(catalog, author_name, pub_year):
@@ -286,7 +303,10 @@ def get_books_by_author_pub_year(catalog, author_name, pub_year):
     tracemalloc.start()
     start_memory = getMemory()
     
-    # TODO: Completar la función de consulta
+    author_books = catalog['books_by_year_author'].get(author_name)
+    
+    if author_books:
+        resultado = author_books.get(pub_year, [])
     resultado = None  # Sustituir con la lógica real
     
     # Detener medición de memoria
