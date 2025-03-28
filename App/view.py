@@ -26,8 +26,9 @@
 
 import sys
 import App.logic as logic
-# TODO Realice la importación del mapa linear probing
-# TODO Realice la importación de ArrayList como estructura de datos auxiliar para sus requerimientos
+from DataStructures.Map import map_linear_probing as lp
+from DataStructures.List import array_list as al
+
 
 
 """
@@ -47,7 +48,36 @@ def new_logic():
     control = logic.new_logic()
     return control
 
-# TODO: Incluir las mediciones de tiempo y uso de memoria en la ejecución de la consulta.
+def show_books_by_author_pub_year(catalog, author_name, pub_year):
+    """
+    Mide tiempo y memoria para la consulta y muestra los resultados.
+    """
+    # Iniciar medición de tiempo y memoria
+    start_time = getTime()
+    tracemalloc.start()
+    start_memory = getMemory()
+
+    # Llamar a la función lógica usando .logic
+    resultado = logic.get_books_by_author_pub_year(catalog, author_name, pub_year)
+
+    # Detener medición de memoria
+    stop_memory = getMemory()
+
+    # Calcular tiempo y memoria usados
+    end_time = getTime()
+    tiempo_transcurrido = deltaTime(end_time, start_time)
+    memoria_usada = deltaMemory(start_memory, stop_memory)
+
+    # Mostrar resultados
+    print(f"Libros encontrados: {len(resultado)}")
+    for book in resultado:
+        print(f"- {book}")
+
+    print(f"\nTiempo de ejecución: {tiempo_transcurrido} ms")
+    print(f"Memoria usada: {memoria_usada} KB")
+
+    return resultado
+
 def load_data(control):
     """
     Solicita a la controlador que cargue los datos
